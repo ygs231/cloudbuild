@@ -228,10 +228,12 @@ func (r *dockerCommandContainer) containerConfig(args, env []string, workDir str
 	if err != nil {
 		return nil, err
 	}
+	// 将 args 合并为一个命令字符串
+	command := strings.Join(args, " ")
 	return &dockercontainer.Config{
 		Image:      r.image,
 		Env:        env,
-		Cmd:        args,
+		Cmd:        []string{"/bin/bash", "-c", command},
 		WorkingDir: workDir,
 		User:       u,
 	}, nil
