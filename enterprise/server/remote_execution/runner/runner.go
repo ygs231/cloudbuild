@@ -316,8 +316,12 @@ func (r *commandRunner) DownloadInputs(ctx context.Context, ioStats *repb.IOStat
 
 // Run runs the task that is currently bound to the command runner.
 func (r *commandRunner) Run(ctx context.Context) *interfaces.CommandResult {
-	//wsPath := r.Workspace.Path()
-	wsPath := r.Workspace.CommandWorkingDirectory()
+	// original wsPath eg: /tmp/user_buildbuddy_remote_build/1d5527f7-e737-46d8-9c18-1a2914cf8a2a
+	wsPath := r.Workspace.Path()
+
+	// command running dir, eg:  /tmp/user_buildbuddy_remote_build/1d5527f7-e737-46d8-9c18-1a2914cf8a2a/build
+	workDir := r.Workspace.CommandWorkingDirectory()
+
 	if r.VFS != nil {
 		wsPath = r.VFS.GetMountDir()
 	}
@@ -332,7 +336,7 @@ func (r *commandRunner) Run(ctx context.Context) *interfaces.CommandResult {
 		if err != nil {
 			return commandutil.ErrorResult(err)
 		}
-		return r.Container.Run(ctx, command, wsPath, creds)
+		return r.Container.Run(ctx, command, wsPath, workDir, creds)
 	}
 
 	// Get the container to "ready" state so that we can exec commands in it.
@@ -357,7 +361,8 @@ func (r *commandRunner) Run(ctx context.Context) *interfaces.CommandResult {
 		if err != nil {
 			return commandutil.ErrorResult(err)
 		}
-		if err := r.Container.Create(ctx, wsPath); err != nil {
+		// mount host wsPath dir in container
+		if err := r.Container.Create(ctx, wsPath, workDir); err != nil {
 			return commandutil.ErrorResult(err)
 		}
 		r.p.mu.Lock()
@@ -922,6 +927,7 @@ func (p *pool) Get(ctx context.Context, st *repb.ScheduledTask) (interfaces.Runn
 			return r, nil
 		}
 	}
+	//  p.buildRoot ->  workspace's rootDir = buildRoot + id
 	ws, err := workspace.New(p.env, p.buildRoot, wsOpts)
 	if err != nil {
 		return nil, err

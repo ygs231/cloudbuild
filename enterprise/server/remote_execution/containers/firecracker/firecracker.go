@@ -1196,7 +1196,7 @@ func (c *FirecrackerContainer) SetTaskFileSystemLayout(fsLayout *container.FileS
 //
 // It is approximately the same as calling PullImageIfNecessary, Create,
 // Exec, then Remove.
-func (c *FirecrackerContainer) Run(ctx context.Context, command *repb.Command, actionWorkingDir string, creds container.PullCredentials) *interfaces.CommandResult {
+func (c *FirecrackerContainer) Run(ctx context.Context, command *repb.Command, workspaceDir string, actionWorkingDir string, creds container.PullCredentials) *interfaces.CommandResult {
 	ctx, span := tracing.StartSpan(ctx)
 	defer span.End()
 
@@ -1228,7 +1228,7 @@ func (c *FirecrackerContainer) Run(ctx context.Context, command *repb.Command, a
 		}
 
 		log.CtxInfof(ctx, "Creating VM.")
-		if err := c.Create(ctx, actionWorkingDir); err != nil {
+		if err := c.Create(ctx, workspaceDir, actionWorkingDir); err != nil {
 			return nonCmdExit(err)
 		}
 
@@ -1266,7 +1266,7 @@ func (c *FirecrackerContainer) Run(ctx context.Context, command *repb.Command, a
 
 // Create creates a new VM and starts a top-level process inside it listening
 // for commands to execute.
-func (c *FirecrackerContainer) Create(ctx context.Context, actionWorkingDir string) error {
+func (c *FirecrackerContainer) Create(ctx context.Context, workspaceDir string, actionWorkingDir string) error {
 	ctx, span := tracing.StartSpan(ctx)
 	defer span.End()
 

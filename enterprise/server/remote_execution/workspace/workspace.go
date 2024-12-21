@@ -108,7 +108,7 @@ func (ws *Workspace) SetTask(ctx context.Context, task *repb.ExecutionTask) {
 		outputDirs = cmd.GetOutputDirectories()
 		outputPaths = append(cmd.GetOutputFiles(), cmd.GetOutputDirectories()...)
 	}
-	//ws.dirHelper = dirtools.NewDirHelper(ws.Path(), outputDirs, outputPaths, ws.dirPerms)
+	// ws.dirHelper = dirtools.NewDirHelper(ws.Path(), outputDirs, outputPaths, ws.dirPerms)
 	ws.dirHelper = dirtools.NewDirHelper(ws.CommandWorkingDirectory(), outputDirs, outputPaths, ws.dirPerms)
 }
 
@@ -269,12 +269,10 @@ func (ws *Workspace) UploadOutputs(ctx context.Context, actionResult *repb.Actio
 	})
 	eg.Go(func() error {
 		var err error
-		//txInfo, err = dirtools.UploadTree(egCtx, ws.env, ws.dirHelper, instanceName, ws.Path(), actionResult)
-		if ws.Path() != ws.CommandWorkingDirectory() {
-			txInfo, err = dirtools.UploadTree(egCtx, ws.env, ws.dirHelper, instanceName, ws.CommandWorkingDirectory(), actionResult)
-		} else {
-			txInfo, err = dirtools.UploadTree(egCtx, ws.env, ws.dirHelper, instanceName, ws.Path(), actionResult)
-		}
+		// txInfo, err = dirtools.UploadTree(egCtx, ws.env, ws.dirHelper, instanceName, ws.Path(), actionResult)
+
+		txInfo, err = dirtools.UploadTree(egCtx, ws.env, ws.dirHelper, instanceName, ws.CommandWorkingDirectory(), actionResult)
+
 		return err
 	})
 	if err := eg.Wait(); err != nil {

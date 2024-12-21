@@ -25,5 +25,6 @@ go_library(
         "@com_github_prometheus_client_golang//prometheus",
         "@org_golang_google_protobuf//types/known/durationpb",
         "@org_golang_google_protobuf//types/known/timestamppb",
+        "@org_golang_google_protobuf//encoding/prototext"
     ],
 )

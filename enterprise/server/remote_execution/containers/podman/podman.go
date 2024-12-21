@@ -326,7 +326,7 @@ func (c *podmanCommandContainer) getPodmanRunArgs(workDir string) []string {
 	return args
 }
 
-func (c *podmanCommandContainer) Run(ctx context.Context, command *repb.Command, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
+func (c *podmanCommandContainer) Run(ctx context.Context, command *repb.Command, workspaceDir string, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
 	c.workDir = workDir
 	defer os.RemoveAll(c.cidFilePath())
 	result := &interfaces.CommandResult{
@@ -460,7 +460,7 @@ func (c *podmanCommandContainer) resolveTargetImage(ctx context.Context, credent
 	return optImage, nil
 }
 
-func (c *podmanCommandContainer) Create(ctx context.Context, workDir string) error {
+func (c *podmanCommandContainer) Create(ctx context.Context, workspaceDir string, workDir string) error {
 	containerName, err := generateContainerName()
 	if err != nil {
 		return status.UnavailableErrorf("failed to generate podman container name: %s", err)

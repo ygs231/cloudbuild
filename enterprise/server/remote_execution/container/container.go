@@ -156,7 +156,7 @@ type CommandContainer interface {
 	//
 	// It is approximately the same as calling PullImageIfNecessary, Create,
 	// Exec, then Remove.
-	Run(ctx context.Context, command *repb.Command, workingDir string, creds PullCredentials) *interfaces.CommandResult
+	Run(ctx context.Context, command *repb.Command, workspaceDir string, workingDir string, creds PullCredentials) *interfaces.CommandResult
 
 	// IsImageCached returns whether the configured image is cached locally.
 	IsImageCached(ctx context.Context) (bool, error)
@@ -172,7 +172,7 @@ type CommandContainer interface {
 	// `docker create` or `ctr containers create` -- in addition to creating the
 	// container, it also puts it in a "ready to execute" state by starting the
 	// top level process.
-	Create(ctx context.Context, workingDir string) error
+	Create(ctx context.Context, workspaceDir string, workingDir string) error
 	// Exec runs a command inside a container, with the same working dir set when
 	// creating the container.
 	//
@@ -382,10 +382,10 @@ type TracedCommandContainer struct {
 	implAttr attribute.KeyValue
 }
 
-func (t *TracedCommandContainer) Run(ctx context.Context, command *repb.Command, workingDir string, creds PullCredentials) *interfaces.CommandResult {
+func (t *TracedCommandContainer) Run(ctx context.Context, command *repb.Command, workspaceDir string, workingDir string, creds PullCredentials) *interfaces.CommandResult {
 	ctx, span := tracing.StartSpan(ctx, trace.WithAttributes(t.implAttr))
 	defer span.End()
-	return t.Delegate.Run(ctx, command, workingDir, creds)
+	return t.Delegate.Run(ctx, command, workspaceDir, workingDir, creds)
 }
 
 func (t *TracedCommandContainer) IsImageCached(ctx context.Context) (bool, error) {
@@ -400,10 +400,10 @@ func (t *TracedCommandContainer) PullImage(ctx context.Context, creds PullCreden
 	return t.Delegate.PullImage(ctx, creds)
 }
 
-func (t *TracedCommandContainer) Create(ctx context.Context, workingDir string) error {
+func (t *TracedCommandContainer) Create(ctx context.Context, workspaceDir string, workingDir string) error {
 	ctx, span := tracing.StartSpan(ctx, trace.WithAttributes(t.implAttr))
 	defer span.End()
-	return t.Delegate.Create(ctx, workingDir)
+	return t.Delegate.Create(ctx, workspaceDir, workingDir)
 }
 
 func (t *TracedCommandContainer) Exec(ctx context.Context, command *repb.Command, opts *Stdio) *interfaces.CommandResult {

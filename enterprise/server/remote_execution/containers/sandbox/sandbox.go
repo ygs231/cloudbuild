@@ -305,11 +305,11 @@ func (c *sandbox) runCmdInSandbox(ctx context.Context, command *repb.Command, wo
 	return result
 }
 
-func (c *sandbox) Run(ctx context.Context, command *repb.Command, workDir string, _ container.PullCredentials) *interfaces.CommandResult {
+func (c *sandbox) Run(ctx context.Context, command *repb.Command, workspaceDir string, workDir string, _ container.PullCredentials) *interfaces.CommandResult {
 	return c.runCmdInSandbox(ctx, command, workDir, &container.Stdio{})
 }
 
-func (c *sandbox) Create(ctx context.Context, workDir string) error {
+func (c *sandbox) Create(ctx context.Context, workspaceDir string, workDir string) error {
 	c.WorkDir = workDir
 	return nil
 }

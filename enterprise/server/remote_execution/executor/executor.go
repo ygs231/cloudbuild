@@ -22,6 +22,7 @@ import (
 	"github.com/buildbuddy-io/buildbuddy/server/util/tracing"
 	"github.com/buildbuddy-io/buildbuddy/server/util/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -159,6 +160,16 @@ func (s *Executor) ExecuteTaskAndStreamResults(ctx context.Context, st *repb.Sch
 	taskID := task.GetExecutionId()
 	adInstanceDigest := digest.NewResourceName(req.GetActionDigest(), req.GetInstanceName())
 
+	// 使用 protojson 以 JSON 格式打印
+	// taskJson, err := protojson.MarshalOptions{Multiline: true}.Marshal(task)
+	// if err != nil {
+	// 	log.Fatalf("Error marshalling task to JSON: %v", err)
+	// }
+	// log.CtxInfof(ctx, "Task:\n%s\n", taskJson)
+	taskText := prototext.Format(task)
+
+	log.CtxInfof(ctx, "Task:\n%s\n", taskText)
+
 	acClient := s.env.GetActionCacheClient()
 
 	stateChangeFn := operation.GetStateChangeFunc(stream, taskID, adInstanceDigest)
@@ -202,11 +213,11 @@ func (s *Executor) ExecuteTaskAndStreamResults(ctx context.Context, st *repb.Sch
 	if err != nil {
 		return finishWithErrFn(status.WrapErrorf(err, "error creating runner for command"))
 	}
-	finishedCleanly := false
-	defer func() {
-		ctx := context.Background()
-		go s.runnerPool.TryRecycle(ctx, r, finishedCleanly)
-	}()
+	// finishedCleanly := false
+	// defer func() {
+	// 	ctx := context.Background()
+	// 	go s.runnerPool.TryRecycle(ctx, r, finishedCleanly)
+	// }()
 
 	log.CtxInfof(ctx, "Preparing runner for task.")
 	stage.Set("pull_image")
@@ -350,7 +361,7 @@ func (s *Executor) ExecuteTaskAndStreamResults(ctx context.Context, st *repb.Sch
 	}
 	if cmdResult.Error == nil {
 		log.CtxInfof(ctx, "Task finished cleanly.")
-		finishedCleanly = true
+		// finishedCleanly = true
 	}
 	return false, nil
 }
