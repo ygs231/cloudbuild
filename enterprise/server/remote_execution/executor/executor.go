@@ -22,6 +22,7 @@ import (
 	"github.com/buildbuddy-io/buildbuddy/server/util/tracing"
 	"github.com/buildbuddy-io/buildbuddy/server/util/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -158,6 +159,9 @@ func (s *Executor) ExecuteTaskAndStreamResults(ctx context.Context, st *repb.Sch
 	req := task.GetExecuteRequest()
 	taskID := task.GetExecutionId()
 	adInstanceDigest := digest.NewResourceName(req.GetActionDigest(), req.GetInstanceName())
+
+	taskText := prototext.Format(task)
+	log.CtxInfof(ctx, "Task:\n%s\n", taskText)
 
 	acClient := s.env.GetActionCacheClient()
 

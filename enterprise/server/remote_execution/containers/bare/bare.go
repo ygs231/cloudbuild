@@ -28,11 +28,11 @@ func NewBareCommandContainer(opts *Opts) container.CommandContainer {
 	return &bareCommandContainer{opts: opts}
 }
 
-func (c *bareCommandContainer) Run(ctx context.Context, command *repb.Command, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
+func (c *bareCommandContainer) Run(ctx context.Context, command *repb.Command, workspaceDir string, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
 	return c.exec(ctx, command, workDir, nil /*=stdio*/)
 }
 
-func (c *bareCommandContainer) Create(ctx context.Context, workDir string) error {
+func (c *bareCommandContainer) Create(ctx context.Context, workspaceDir string, workDir string) error {
 	c.WorkDir = workDir
 	return nil
 }

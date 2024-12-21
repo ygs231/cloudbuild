@@ -93,7 +93,7 @@ func NewDockerContainer(env environment.Env, imageCacheAuth *container.ImageCach
 	}
 }
 
-func (r *dockerCommandContainer) Run(ctx context.Context, command *repb.Command, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
+func (r *dockerCommandContainer) Run(ctx context.Context, command *repb.Command, workspaceDir string, workDir string, creds container.PullCredentials) *interfaces.CommandResult {
 	result := &interfaces.CommandResult{
 		CommandDebugString: fmt.Sprintf("(docker) %s", command.GetArguments()),
 		ExitCode:           commandutil.NoExitCode,
@@ -124,7 +124,7 @@ func (r *dockerCommandContainer) Run(ctx context.Context, command *repb.Command,
 	createResponse, err := r.client.ContainerCreate(
 		ctx,
 		containerCfg,
-		r.hostConfig(workDir),
+		r.hostConfig(workspaceDir),
 		/*networkingConfig=*/ nil,
 		/*platform=*/ nil,
 		containerName,
@@ -228,16 +228,18 @@ func (r *dockerCommandContainer) containerConfig(args, env []string, workDir str
 	if err != nil {
 		return nil, err
 	}
+	// 将 args 合并为一个命令字符串
+	command := strings.Join(args, " ")
 	return &dockercontainer.Config{
 		Image:      r.image,
 		Env:        env,
-		Cmd:        args,
+		Cmd:        []string{"/bin/bash", "-c", command},
 		WorkingDir: workDir,
 		User:       u,
 	}, nil
 }
 
-func (r *dockerCommandContainer) hostConfig(workDir string) *dockercontainer.HostConfig {
+func (r *dockerCommandContainer) hostConfig(workspaceDir string) *dockercontainer.HostConfig {
 	networkMode := dockercontainer.NetworkMode(r.options.DefaultNetworkMode)
 	// Support the legacy `executor.docker_net_host` config option.
 	if r.options.UseHostNetwork {
@@ -274,8 +276,8 @@ func (r *dockerCommandContainer) hostConfig(workDir string) *dockercontainer.Hos
 			// Source path here needs to point to the host machine (*not* a path in this
 			// executor's FS), since we spawn child actions via the docker daemon
 			// running on the host.
-			filepath.Join(r.hostRootDir, filepath.Base(workDir)),
-			workDir,
+			filepath.Join(r.hostRootDir, filepath.Base(workspaceDir)),
+			workspaceDir,
 			mountMode,
 		),
 	}
@@ -414,13 +416,13 @@ func generateContainerName() (string, error) {
 	return "buildbuddy_exec_" + suffix, nil
 }
 
-func (r *dockerCommandContainer) Create(ctx context.Context, workDir string) error {
+func (r *dockerCommandContainer) Create(ctx context.Context, workspaceDir string, workDir string) error {
 	return commandutil.RetryIfTextFileBusy(func() error {
-		return r.create(ctx, workDir)
+		return r.create(ctx, workspaceDir, workDir)
 	})
 }
 
-func (r *dockerCommandContainer) create(ctx context.Context, workDir string) error {
+func (r *dockerCommandContainer) create(ctx context.Context, workspaceDir string, workDir string) error {
 	containerName, err := generateContainerName()
 	if err != nil {
 		return status.UnavailableErrorf("failed to generate docker container name: %s", err)
@@ -435,7 +437,7 @@ func (r *dockerCommandContainer) create(ctx context.Context, workDir string) err
 		// Top-level container process just sleeps forever so that the container
 		// stays alive until explicitly killed.
 		containerConfig,
-		r.hostConfig(workDir),
+		r.hostConfig(workspaceDir), // 工作空间目录
 		/*networkingConfig=*/ nil,
 		/*platform=*/ nil,
 		containerName,

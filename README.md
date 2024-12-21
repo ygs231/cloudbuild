@@ -15,6 +15,34 @@ It's written in Golang and React and can be deployed as a Docker image. It's run
 
 # Get started
 
+## Starting the Master Server
+
+1. The default configuration file for the master server is located at: `enterprise/config/buildbuddy.local.yaml`.
+   
+2. To start the master server, execute the following command:
+   ```
+   bazel run //enterprise/server:server
+   ```
+
+## Starting the Executor
+
+1. The default configuration file for the executor is located at: `enterprise/config/executor.local.yaml`.
+
+2. To start the executor, execute the following command:
+   ```
+   bazel run //enterprise/server/cmd/executor:executor
+   ```
+
+### Notes:
+
+- **Configuration**: Ensure that both the master server and the executor are properly configured by reviewing and, if necessary, updating their respective configuration files before starting.
+  
+- **Dependencies**: Make sure all dependencies are installed and up-to-date, and that `Bazel` is properly set up on your system before running the commands.
+
+- **Running the System**: The master server and executor can be run independently. However, for proper functionality, they should both be running concurrently in most cases. First, start the master server, and then start the executor.
+
+---
+
 Getting started with BuildBuddy is simple. Just add these **two lines** to your `.bazelrc` file.
 
 **.bazelrc**
