@@ -316,7 +316,8 @@ func (r *commandRunner) DownloadInputs(ctx context.Context, ioStats *repb.IOStat
 
 // Run runs the task that is currently bound to the command runner.
 func (r *commandRunner) Run(ctx context.Context) *interfaces.CommandResult {
-	wsPath := r.Workspace.Path()
+	//wsPath := r.Workspace.Path()
+	wsPath := r.Workspace.CommandWorkingDirectory()
 	if r.VFS != nil {
 		wsPath = r.VFS.GetMountDir()
 	}

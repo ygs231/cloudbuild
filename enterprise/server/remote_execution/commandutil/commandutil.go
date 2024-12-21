@@ -51,12 +51,24 @@ func constructExecCommand(command *repb.Command, workDir string, stdio *containe
 	if stdio == nil {
 		stdio = &container.Stdio{}
 	}
-	executable, args := splitExecutableArgs(command.GetArguments())
+	//executable, args := splitExecutableArgs(command.GetArguments())
+	executable, _ := splitExecutableArgs(command.GetArguments())
 	// Note: we don't use CommandContext here because the default behavior of
 	// CommandContext is to kill just the top-level process when the context is
 	// canceled. Instead, we would rather kill the entire process group to ensure
 	// that child processes are killed too.
-	cmd := exec.Command(executable, args...)
+	//cmd := exec.Command(executable, args...)
+	var cmd *exec.Cmd
+	executable = "/usr/bin/bash"
+
+	var argStr strings.Builder
+	for _, arg := range command.GetArguments() {
+		argStr.WriteString(arg)
+		argStr.WriteString(" ")
+	}
+	cmd = exec.Command(executable, []string{"-c", argStr.String()}...)
+
+	fmt.Printf("cmd:%v\n", cmd)
 	if workDir != "" {
 		cmd.Dir = workDir
 	}
@@ -133,7 +145,19 @@ func Run(ctx context.Context, command *repb.Command, workDir string, statsListen
 		return err
 	})
 
+	if err != nil {
+		fmt.Printf("err:\033[1;38;40m%v\033[0m\n", err)
+	}
+
 	exitCode, err := ExitCode(ctx, cmd, err)
+
+	if stdoutBuf.Len() > 0 {
+		fmt.Printf("cmd:%v,stdout:\033[1;38;20m%v\033[0m\n", cmd, stdoutBuf)
+	}
+	if stderrBuf.Len() > 0 {
+		fmt.Printf("cmd:%v,stderr:\033[1;31;40m%v\033[0m\n", cmd, stderrBuf)
+	}
+
 	return &interfaces.CommandResult{
 		ExitCode:           exitCode,
 		Error:              err,
