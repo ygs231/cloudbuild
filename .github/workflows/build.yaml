@@ -19,9 +19,11 @@ jobs:
           redis - cli ping || (echo "Redis 启动失败" && exit 1)
 
       - name: Set up Bazel
-        uses: bazelbuild/setup - bazel@v2
-        with:
-          bazel_version: 6.2.0
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/6.0.0/bazel-6.0.0-installer-linux-x86_64.sh
+          chmod +x bazel-6.0.0-installer-linux-x86_64.sh
+          ./bazel-6.0.0-installer-linux-x86_64.sh --user
+          export PATH="$PATH:$HOME/bin"
 
       - name: Build Server
         run: bazel build //enterprise/server:server
