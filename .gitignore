@@ -42,3 +42,4 @@ user.bazelrc
 # BuildBuddy certs
 buildbuddy-cert.pem
 buildbuddy-key.pem
+/.idea
